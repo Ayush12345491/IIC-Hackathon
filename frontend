@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudySync | Smart Revision Assistant</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Plus Jakarta Sans for headings, Inter for body -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #4f46e5; /* Indigo 600 */
+            --primary-hover: #4338ca;
+            --accent: #8b5cf6; /* Violet 500 */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+            /* Subtle dot pattern for texture */
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #334155; /* Slate 700 */
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, .font-heading {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Card Styles - Modern & Soft */
+        .card {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border: 1px solid #e2e8f0; /* Slate 200 */
+            border-radius: 1rem; /* Rounded-2xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            border-color: #cbd5e1;
+        }
+
+        /* Button Styles - Gradient & Engaging */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Navigation Glass Effect */
+        .nav-glass {
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Flashcard Flip Animation - Enhanced */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy effect */
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* Lined Paper Effect for Front */
+        .flip-card-front {
+            background-color: #fff;
+            background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+            background-size: 100% 28px;
+        }
+        
+        .flip-card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+            border-color: #c7d2fe;
+            color: #312e81;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 2px solid #ffffff;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .highlight-keyword {
+            background-color: #eff6ff; /* Indigo 50 */
+            color: #4338ca; /* Indigo 700 */
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            border-bottom: 2px solid #a5b4fc;
+            transition: all 0.2s;
+        }
+        .highlight-keyword:hover {
+            background-color: #4f46e5;
+            color: white;
+            border-bottom-color: #312e81;
+        }
+
+        /* Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            background: transparent; 
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            margin-top: -7px; 
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+            transition: box-shadow 0.2s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 6px rgba(79, 70, 229, 0.25);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navigation -->
+    <nav class="nav-glass sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-indigo-600 to-violet-600 text-white w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                        <i class="fa-solid fa-brain text-sm"></i>
+                    </div>
+                    <span class="font-heading font-bold text-xl tracking-tight text-slate-800">StudySync</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleHistory()" class="text-sm font-semibold text-slate-500 hover:text-indigo-600 transition-colors flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-indigo-50">
+                        <i class="fa-solid fa-clock-rotate-left"></i> 
+                        <span class="hidden sm:inline">History</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT COLUMN: Inputs & Controls -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Mode Selection -->
+                <div class="card p-1.5 flex space-x-1 bg-white">
+                    <button onclick="setMode('quick')" id="btn-quick" class="flex-1 py-2.5 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm transition-all">
+                        <i class="fa-solid fa-bolt mr-1.5"></i>Quick
+                    </button>
+                    <button onclick="setMode('study')" id="btn-study" class="flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all">
+                        <i class="fa-solid fa-book-open mr-1.5"></i>Study
+                    </button>
+                    <button onclick="setMode('exam')" id="btn-exam" class="flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all">
+                        <i class="fa-solid fa-graduation-cap mr-1.5"></i>Exam
+                    </button>
+                </div>
+
+                <!-- Input Area -->
+                <div class="card p-6 bg-white">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-sm font-heading font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-regular fa-keyboard text-indigo-400"></i> Source Text
+                        </h2>
+                        <div class="flex space-x-2">
+                             <label for="file-upload" class="cursor-pointer text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Upload
+                                <input id="file-upload" type="file" class="hidden" accept=".txt" onchange="handleFileUpload(this)">
+                            </label>
+                            <button onclick="clearText()" class="text-xs font-bold text-slate-400 hover:text-rose-500 px-2 py-1.5 transition">
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="input-text" class="w-full h-64 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white focus:outline-none resize-none text-sm leading-relaxed text-slate-700 placeholder-slate-400 transition-colors" placeholder="Paste your lecture notes, articles, or essay here..."></textarea>
+                    
+                    <!-- Stats footer -->
+                    <div class="mt-3 flex justify-between items-center pt-2">
+                        <span id="input-word-count" class="text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded">0 words</span>
+                        <span id="input-read-time" class="text-xs font-semibold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">~0 min read</span>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="card p-5 bg-white group">
+                    <div class="flex items-center justify-between cursor-pointer" onclick="toggleOptions()">
+                        <h3 class="text-sm font-heading font-bold text-slate-700 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-slate-400 group-hover:text-indigo-500 transition-colors"></i> Configuration
+                        </h3>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform" id="opt-arrow"></i>
+                    </div>
+                    <div id="advanced-options" class="hidden mt-5 space-y-6 pt-2 border-t border-slate-100">
+                        <div>
+                            <div class="flex justify-between mb-3">
+                                <label class="text-xs font-bold text-slate-500 uppercase">Summary Detail</label>
+                                <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded" id="length-label">Balanced</span>
+                            </div>
+                            <input type="range" id="length-slider" min="1" max="3" value="2" class="w-full" oninput="updateSliderLabel(this.value)">
+                            <div class="flex justify-between text-[10px] font-medium text-slate-400 mt-1 px-1">
+                                <span>Short</span>
+                                <span>Long</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Reading Speed (WPM)</label>
+                            <div class="relative">
+                                <input type="number" id="wpm-input" value="200" class="w-full pl-3 pr-10 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-medium text-slate-700">
+                                <span class="absolute right-3 top-2 text-xs text-slate-400 font-medium">wpm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="processSummarization()" class="w-full py-4 btn-primary font-heading font-bold text-base rounded-xl shadow-lg flex justify-center items-center gap-2 group">
+                    <i class="fa-solid fa-wand-magic-sparkles group-hover:rotate-12 transition-transform"></i>
+                    <span>Generate Smart Summary</span>
+                    <div id="btn-loader" class="loader ml-2 hidden"></div>
+                </button>
+
+            </div>
+
+            <!-- RIGHT COLUMN: Output -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- Empty State -->
+                <div id="empty-state" class="card p-12 flex flex-col items-center justify-center text-center h-full min-h-[500px] border-2 border-dashed border-slate-200 bg-slate-50/30">
+                    <div class="w-20 h-20 bg-white border border-indigo-100 rounded-2xl flex items-center justify-center mb-6 shadow-sm transform rotate-3">
+                        <i class="fa-regular fa-lightbulb text-3xl text-indigo-400"></i>
+                    </div>
+                    <h3 class="text-xl font-heading font-bold text-slate-800 mb-2">Ready to Revise?</h3>
+                    <p class="text-sm text-slate-500 max-w-xs leading-relaxed">Paste your study notes on the left. We'll extract key points and create flashcards instantly.</p>
+                </div>
+
+                <!-- Results -->
+                <div id="results-container" class="hidden space-y-6">
+                    
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Est. Time</p>
+                            <p class="text-xl font-heading font-extrabold text-slate-800" id="res-time">0s</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Reduced</p>
+                            <p class="text-xl font-heading font-extrabold text-emerald-500" id="res-reduction">0%</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Keywords</p>
+                            <p class="text-xl font-heading font-extrabold text-indigo-500" id="res-keywords-count">0</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-center">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Flashcards</p>
+                            <p class="text-xl font-heading font-extrabold text-violet-500" id="res-flashcards-count">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="bg-white/50 backdrop-blur rounded-xl p-1.5 inline-flex space-x-2 w-full border border-slate-200/60">
+                        <button onclick="switchTab('summary')" id="tab-summary" class="flex-1 py-2 rounded-lg text-sm font-bold text-indigo-600 bg-white shadow-sm transition-all">
+                            Key Points
+                        </button>
+                        <button onclick="switchTab('flashcards')" id="tab-flashcards" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all">
+                            Flashcards
+                        </button>
+                        <button onclick="switchTab('keywords')" id="tab-keywords" class="flex-1 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all">
+                            Keywords
+                        </button>
+                    </div>
+
+                    <!-- Content Areas -->
+                    <div id="content-summary" class="card p-8 min-h-[300px] bg-white">
+                        <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-50">
+                            <h3 class="text-lg font-heading font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-list-ul text-indigo-500"></i> Summary
+                            </h3>
+                            <button onclick="copyToClipboard('summary-list')" class="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition">
+                                <i class="fa-regular fa-copy mr-1"></i> Copy Text
+                            </button>
+                        </div>
+                        <ul id="summary-list" class="space-y-4 text-slate-700 leading-relaxed list-none">
+                            <!-- Bullets -->
+                        </ul>
+                    </div>
+
+                    <div id="content-flashcards" class="hidden">
+                         <div class="flex justify-between items-center mb-4 px-2">
+                            <h3 class="text-lg font-heading font-bold text-slate-800">Active Recall</h3>
+                            <span class="text-xs font-semibold text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full">Tap card to flip</span>
+                        </div>
+                        <div id="flashcards-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <!-- Cards -->
+                        </div>
+                    </div>
+
+                    <div id="content-keywords" class="hidden card p-8 bg-white">
+                        <h3 class="text-lg font-heading font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-tags text-indigo-500"></i> Important Terms
+                        </h3>
+                        <div id="keywords-list" class="flex flex-wrap gap-3">
+                            <!-- Chips -->
+                        </div>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="card p-4 bg-white flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">Export Results</span>
+                        <div class="flex gap-2">
+                            <button onclick="downloadData('txt')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-white hover:border-indigo-300 hover:text-indigo-600 transition shadow-sm">
+                                .TXT
+                            </button>
+                            <button onclick="downloadData('md')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-white hover:border-indigo-300 hover:text-indigo-600 transition shadow-sm">
+                                .MD
+                            </button>
+                            <button onclick="downloadData('csv')" class="px-4 py-2 text-xs font-bold text-white bg-slate-800 border border-slate-800 rounded-lg hover:bg-slate-900 transition shadow-sm flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group"></i> Anki
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex justify-end transition-opacity duration-300">
+        <div class="w-full max-w-md bg-white h-full shadow-2xl transform transition-transform duration-300 translate-x-full flex flex-col" id="history-panel">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                <h3 class="font-heading font-bold text-lg text-slate-800">Session History</h3>
+                <button onclick="toggleHistory()" class="text-slate-400 hover:text-rose-500 transition w-8 h-8 rounded-full flex items-center justify-center hover:bg-rose-50"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div id="history-list" class="p-6 space-y-3 overflow-y-auto flex-1">
+                <!-- History items -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- STATE ---
+        let currentMode = 'quick';
+        let currentText = '';
+        let generatedData = null;
+        const stopWords = new Set(["a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"]);
+
+        // --- UI INTERACTION ---
+
+        document.getElementById('input-text').addEventListener('input', (e) => {
+            const text = e.target.value;
+            currentText = text;
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const wpm = document.getElementById('wpm-input').value;
+            const time = Math.ceil(words / wpm);
+            
+            document.getElementById('input-word-count').innerText = `${words} words`;
+            document.getElementById('input-read-time').innerText = words > 0 ? `~${time} min read` : '~0 min read';
+        });
+
+        function setMode(mode) {
+            currentMode = mode;
+            ['quick', 'study', 'exam'].forEach(m => {
+                const btn = document.getElementById(`btn-${m}`);
+                if(m === mode) {
+                    btn.className = "flex-1 py-2.5 text-sm font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm transition-all";
+                } else {
+                    btn.className = "flex-1 py-2.5 text-sm font-bold rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-all";
+                }
+            });
+        }
+
+        function updateSliderLabel(val) {
+            const labels = {1: 'Concise', 2: 'Balanced', 3: 'Detailed'};
+            document.getElementById('length-label').innerText = labels[val];
+        }
+
+        function toggleOptions() {
+            const el = document.getElementById('advanced-options');
+            const arrow = document.getElementById('opt-arrow');
+            el.classList.toggle('hidden');
+            arrow.classList.toggle('rotate-180');
+        }
+
+        function switchTab(tabName) {
+            ['summary', 'flashcards', 'keywords'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                const content = document.getElementById(`content-${t}`);
+                
+                if(t === tabName) {
+                    btn.className = "flex-1 py-2 rounded-lg text-sm font-bold text-indigo-600 bg-white shadow-sm transition-all";
+                    content.classList.remove('hidden');
+                } else {
+                    btn.className = "flex-1 py-2 rounded-lg text-sm font-medium text-slate-500 hover:text-slate-700 hover:bg-white/50 transition-all";
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        function clearText() {
+            document.getElementById('input-text').value = '';
+            document.getElementById('input-text').dispatchEvent(new Event('input'));
+            document.getElementById('results-container').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+        }
+
+        function handleFileUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('input-text').value = e.target.result;
+                document.getElementById('input-text').dispatchEvent(new Event('input'));
+            };
+            reader.readAsText(file);
+        }
+
+        function toggleHistory() {
+            const modal = document.getElementById('history-modal');
+            const panel = document.getElementById('history-panel');
+            
+            if (modal.classList.contains('hidden')) {
+                renderHistory();
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('translate-x-full');
+                }, 10);
+            } else {
+                panel.classList.add('translate-x-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 200);
+            }
+        }
+
+        // --- CORE LOGIC ---
+
+        async function processSummarization() {
+            const text = document.getElementById('input-text').value;
+            if (!text.trim()) {
+                alert("Please enter text to summarize.");
+                return;
+            }
+
+            const btnLoader = document.getElementById('btn-loader');
+            btnLoader.classList.remove('hidden');
+
+            // Simulate delay
+            await new Promise(r => setTimeout(r, 800));
+
+            const cleanText = text.replace(/\s+/g, ' ').trim();
+            const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
+            const wpm = parseInt(document.getElementById('wpm-input').value) || 200;
+            const totalWords = cleanText.split(' ').length;
+
+            const words = cleanText.toLowerCase().match(/\b\w+\b/g);
+            const wordFreq = {};
+            if (words) {
+                words.forEach(w => {
+                    if (!stopWords.has(w) && w.length > 2) {
+                        wordFreq[w] = (wordFreq[w] || 0) + 1;
+                    }
+                });
+            }
+            const sortedKeywords = Object.keys(wordFreq).sort((a, b) => wordFreq[b] - wordFreq[a]);
+            const topKeywords = sortedKeywords.slice(0, 10); 
+
+            const sentenceScores = sentences.map((s, index) => {
+                let score = 0;
+                const sWords = s.toLowerCase().match(/\b\w+\b/g) || [];
+                sWords.forEach(w => {
+                    if (wordFreq[w]) score += wordFreq[w];
+                });
+                if (index === 0) score *= 1.5;
+                return { text: s.trim(), score: score / (sWords.length || 1) }; 
+            });
+
+            sentenceScores.sort((a, b) => b.score - a.score);
+
+            let numSentences = 3;
+            const sliderVal = document.getElementById('length-slider').value;
+            if (currentMode === 'quick') numSentences = 3;
+            if (currentMode === 'study') numSentences = 5;
+            if (currentMode === 'exam') numSentences = 7;
+            
+            if(sliderVal == 1) numSentences = Math.max(2, numSentences - 1);
+            if(sliderVal == 3) numSentences = numSentences + 2;
+            numSentences = Math.min(numSentences, sentences.length);
+
+            // Re-sort sentences by original appearance for flow
+            let selectedSentences = sentenceScores.slice(0, numSentences);
+            // Find original indices for simple resorting - simplified here:
+            // Actually, let's just keep them in score order for MVP "Key Points" style, 
+            // or we can try to map them back. For now, let's keep score order but refined.
+            // Better: Filter sentences that are in top N.
+            
+            const topSentences = selectedSentences.map(s => s.text);
+
+            // Flashcard generation
+            const flashcards = [];
+            const usedSentences = new Set();
+            topKeywords.slice(0, 7).forEach(keyword => {
+                const sentenceObj = sentenceScores.find(s => s.text.toLowerCase().includes(keyword) && !usedSentences.has(s.text));
+                if (sentenceObj) {
+                    usedSentences.add(sentenceObj.text);
+                    const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+                    const question = sentenceObj.text.replace(regex, "_______");
+                    flashcards.push({
+                        q: question.length > 120 ? question.substring(0, 120) + "..." : question,
+                        a: keyword.charAt(0).toUpperCase() + keyword.slice(1)
+                    });
+                }
+            });
+
+            const summaryWordCount = topSentences.join(' ').split(' ').length;
+            const readTimeSeconds = Math.ceil((summaryWordCount / wpm) * 60);
+            const reduction = totalWords > 0 ? Math.round((1 - (summaryWordCount / totalWords)) * 100) : 0;
+
+            generatedData = {
+                originalText: text,
+                summary: topSentences,
+                keywords: topKeywords,
+                flashcards: flashcards,
+                stats: {
+                    readTime: readTimeSeconds < 60 ? `${readTimeSeconds}s` : `${Math.ceil(readTimeSeconds/60)}m`,
+                    reduction: reduction > 0 ? `${reduction}%` : '0%',
+                    wordCount: summaryWordCount
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            saveToHistory(generatedData);
+            renderResults();
+            btnLoader.classList.add('hidden');
+        }
+
+        function renderResults() {
+            document.getElementById('empty-state').classList.add('hidden');
+            document.getElementById('results-container').classList.remove('hidden');
+
+            document.getElementById('res-time').innerText = generatedData.stats.readTime;
+            document.getElementById('res-reduction').innerText = generatedData.stats.reduction;
+            document.getElementById('res-keywords-count').innerText = generatedData.keywords.length;
+            document.getElementById('res-flashcards-count').innerText = generatedData.flashcards.length;
+
+            const ul = document.getElementById('summary-list');
+            ul.innerHTML = '';
+            generatedData.summary.forEach(s => {
+                let formattedSentence = s;
+                generatedData.keywords.forEach(k => {
+                    const regex = new RegExp(`\\b${k}\\b`, 'gi');
+                    formattedSentence = formattedSentence.replace(regex, match => `<span class="bg-indigo-50 text-indigo-700 font-bold px-1 rounded border border-indigo-100">${match}</span>`);
+                });
+                ul.innerHTML += `<li class="flex items-start gap-3"><div class="mt-1.5 w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></div><span class="text-slate-700 font-medium">${formattedSentence}</span></li>`;
+            });
+
+            const kDiv = document.getElementById('keywords-list');
+            kDiv.innerHTML = '';
+            generatedData.keywords.forEach(k => {
+                kDiv.innerHTML += `<span class="highlight-keyword text-sm">${k}</span>`;
+            });
+
+            const fDiv = document.getElementById('flashcards-grid');
+            fDiv.innerHTML = '';
+            generatedData.flashcards.forEach((card, idx) => {
+                fDiv.innerHTML += `
+                <div class="flip-card h-56 cursor-pointer group" onclick="this.classList.toggle('flipped')">
+                    <div class="flip-card-inner h-full">
+                        <div class="flip-card-front relative">
+                            <div class="absolute top-3 right-3 text-slate-300"><i class="fa-solid fa-rotate"></i></div>
+                            <span class="text-xs text-indigo-500 font-bold uppercase mb-2 bg-indigo-50 px-2 py-1 rounded-md self-start">Card ${idx+1}</span>
+                            <p class="font-semibold text-slate-700 leading-snug text-lg text-center px-2">"${card.q}"</p>
+                        </div>
+                        <div class="flip-card-back">
+                            <p class="text-xs uppercase tracking-widest opacity-70 mb-2 font-bold">Answer</p>
+                            <p class="text-2xl font-heading font-extrabold">${card.a}</p>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            switchTab('summary');
+        }
+
+        function copyToClipboard(elementId) {
+            const el = document.getElementById(elementId);
+            const textarea = document.createElement('textarea');
+            textarea.value = el.innerText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-check mr-1"></i> Copied`;
+            setTimeout(() => btn.innerHTML = originalContent, 2000);
+        }
+
+        function downloadData(format) {
+            if(!generatedData) return;
+            let content = "";
+            let filename = `Summary_${new Date().toISOString().slice(0,10)}`;
+            let type = "text/plain";
+
+            if (format === 'txt') {
+                content = `SUMMARY\n\n${generatedData.summary.join('\n\n')}`;
+                filename += ".txt";
+            } else if (format === 'md') {
+                content = `# Summary\n\n${generatedData.summary.map(s => `- ${s}`).join('\n')}`;
+                filename += ".md";
+            } else if (format === 'csv') {
+                content = "Front,Back\n" + generatedData.flashcards.map(f => `"${f.q.replace(/"/g, '""')}","${f.a.replace(/"/g, '""')}"`).join('\n');
+                filename += ".csv";
+                type = "text/csv";
+            }
+
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function saveToHistory(data) {
+            let history = JSON.parse(localStorage.getItem('studySyncHistory') || '[]');
+            const historyItem = {
+                preview: data.summary[0].substring(0, 50) + "...",
+                timestamp: new Date().toLocaleString(),
+                data: data
+            };
+            history.unshift(historyItem);
+            if(history.length > 10) history.pop();
+            localStorage.setItem('studySyncHistory', JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('studySyncHistory') || '[]');
+            const container = document.getElementById('history-list');
+            
+            if(history.length === 0) {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-40 text-slate-400 gap-2">
+                    <i class="fa-regular fa-folder-open text-2xl"></i>
+                    <span class="text-sm font-medium">No history found</span>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = history.map((item, idx) => `
+                <div class="p-4 bg-white border border-slate-200 rounded-xl hover:border-indigo-300 hover:shadow-md cursor-pointer transition group" onclick="loadHistoryItem(${idx})">
+                    <p class="font-bold text-sm text-slate-700 mb-1 truncate group-hover:text-indigo-600 transition-colors">${item.preview}</p>
+                    <p class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock text-[10px]"></i> ${item.timestamp}</p>
+                </div>
+            `).join('');
+        }
+
+        function loadHistoryItem(index) {
+            const history = JSON.parse(localStorage.getItem('studySyncHistory') || '[]');
+            generatedData = history[index].data;
+            document.getElementById('input-text').value = generatedData.originalText;
+            document.getElementById('input-text').dispatchEvent(new Event('input'));
+            renderResults();
+            toggleHistory(); 
+        }
+    </script>
+</body>
+</html>
